@@ -8,8 +8,7 @@ cd(save_dir)
 
 fileNames = {'Sub00054_step_error.mat', 'Sub00061_step_error.mat', 'Sub00159_step_error.mat'};
 
-% Initialize 
-means = zeros(1, length(fileNames)); %
+means = zeros(1, length(fileNames)); 
 stdDevs = zeros(1, length(fileNames)); 
 
 for i = 1:length(fileNames)
@@ -26,12 +25,10 @@ bar(means, 'FaceColor', barcolor(2,:));
 hold on;
 
 % Add error bars
-errorbar(1:length(means), means, stdDevs, 'k.', 'LineWidth', 1.5); % Error bars representing SD
-
+errorbar(1:length(means), means, stdDevs, 'k.', 'LineWidth', 1.5); % Error bars for SD
 
 set(gca, 'XTickLabel', {'Subject 1', 'Subject 2', 'Subject 3'});
-
-set(gca, 'FontSize', 14); % Set the font size for axis numbers
+set(gca, 'FontSize', 14); 
 ylabel('Y error (m)');
 grid on;
 

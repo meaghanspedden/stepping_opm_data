@@ -1,4 +1,6 @@
-%Loops through blocks, calculates y errror and hits
+%Loops through runs, calculates foot position error (AP direction)
+%also used to generate example plot for paper (Figure 4D)
+
 
 datdir='D:\STEPPING\sub-OP00159\ses-001\beh';
 addpath(datdir)
@@ -6,7 +8,7 @@ save_dir='D:\STEPPING\stepping paper\Sci data paper';
 
 SubjectIDs={'00159'};
 
-plotop=0;%plotting option (plot example in paper, for 159)
+plotop=0;%plotting option (plot example in paper, for subject 159)
 nsteps=30; %pr block
 runs=1:6;
 nruns=length(runs);
@@ -32,6 +34,7 @@ for jj=1:length(SubjectIDs)
         dat = textscan(fileID,'%.8f %s %f %f %f %f', 'Delimiter',';');
         fclose(fileID);
         %% extract data
+        
         headers=dat{:,2}; %col 2 contains headers Mode/trig/trialend/marker etc.
         timestamps=dat{:,1}; %time stamps
         xcoords=dat{:,3}; %x coords (and mode numbers)
@@ -92,7 +95,7 @@ for jj=1:length(SubjectIDs)
 
                 % Draw the circle using patch
                 if plotop
-                    patch(x_circle, y_circle, 'b', 'EdgeColor', 'k','FaceAlpha',0.7); % Blue filled circle
+                    patch(x_circle, y_circle, 'b', 'EdgeColor', 'k','FaceAlpha',0.7); 
                     hold on
                     xlim([-0.6 0.6])
                     ylim([-0.2 1])
@@ -108,8 +111,8 @@ for jj=1:length(SubjectIDs)
 
 
     y_errorall=y_error(:);
-    figure;
-    histogram(y_errorall)
+%     figure;
+%     histogram(y_errorall)
 
     savename=sprintf('Sub%s_step_error',Subject);
     cd(save_dir)

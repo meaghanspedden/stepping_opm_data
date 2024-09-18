@@ -14,12 +14,7 @@ colnum=3;
 
 for sub=1:length(SubIDs)
 
-load(fullfile(save_dir,['med_pos_and_iqr_',SubIDs{sub}]))
-
-upperBound = medianValues + 0.5 * iqrValues;
-lowerBound = medianValues - 0.5 * iqrValues;
-
-%fill([time, fliplr(time)], [upperBound, fliplr(lowerBound)], colors(colnum,:), 'FaceAlpha', 0.35, 'EdgeColor', 'none');
+load(fullfile(save_dir,['med_pos_',SubIDs{sub}]))
 
 plot(time, medianValues, 'color',colors(colnum,:), 'LineWidth', 4);
 set(gca, 'FontSize', 14); 
@@ -29,8 +24,6 @@ colnum=colnum+4;
 end
 
 legend({'Sub1', 'Sub2','Sub3'})
-
-%legend({'','Sub1','', 'Sub2','', 'Sub3'})
 
 
 savename='medianPositionAll.pdf';

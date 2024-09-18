@@ -16,8 +16,8 @@ sub='OP00061';
 %sub='OP00159';
 
 
-datpath='D:\STEPPING\';
-savepath=['D:\STEPPING\Coh_results',sub(3:end),'\Dec2023'];
+datpath='D:\STEPPING_bids\';
+savepath=['D:\steppingsave\',sub(3:end)];
 
 if ~exist(savepath,'dir')
     mkdir(savepath)
@@ -31,11 +31,9 @@ if strcmp(sub,'OP00061')
 
     MEGruns={'001','002','003','004','005'};
     posfile=[datpath,'sub-OP00061\ses-001\meg\ds_sub-OP00061_ses-001_task-stepping_positions.tsv'];
-   MRIfile= 'D:\OP00061_experiment\mmsMQ0484_orig.img';
-   % MRIfile=[datpath,'sub-OP00061\ses-001\anat\OP00061_defaced.nii'];
+    MRIfile=[datpath,'sub-OP00061\ses-001\anat\OP00061_defaced.nii'];
     badchans='G2-DH';
     trigChan='NI-TRIG-1';
-
 
 
 elseif strcmp(sub,'OP00054')
@@ -48,7 +46,7 @@ elseif strcmp(sub,'OP00054')
 
 
 elseif strcmp(sub,'OP00159')
-    MEGruns={'1','2','3','4','5','6'};
+    MEGruns={'001','002','003','004','005','006'};
     posfile=[datpath,'sub-OP00159\ses-001\meg\sub-OP00159_ses-001_task-stepping_positions.tsv'];
     MRIfile=[datpath,'sub-OP00159\ses-001\anat\OP00159_defaced.nii'];
     badchans={'2-QK-X','2-QK-Y','2-QK-Z','X39','Y39','Z39'};
@@ -65,11 +63,11 @@ end
 
 for k=1:length(MEGruns)
 
-    if strcmp(sub,'OP00159') % no ds prefix
+    if strcmp(sub,'OP00159') % no ds prefix for Neuro 1 acquisition
 
         filetemplate=[datpath,'sub-OP',sub(3:end),'\ses-001\meg\sub-OP',sub(3:end),'_ses-001_task-stepping_run-'];
 
-    else %old system recordings have ds prefix
+    else %og acquisition system recordings have ds prefix
         filetemplate=[datpath,'sub-OP',sub(3:end),'\ses-001\meg\ds_sub-OP',sub(3:end),'_ses-001_task-stepping_run-'];
 
     end
@@ -82,7 +80,7 @@ for k=1:length(MEGruns)
     S.channels = [filetemplate,MEGruns{k},'_channels.tsv'];
     S.positions = posfile;
     S.precision = 'single';
-    S.sMRI=MRIfile;
+    S.sMRI = MRIfile;
 
     D = spm_opm_create(S);
 
@@ -90,13 +88,10 @@ for k=1:length(MEGruns)
 
 %% load emg data, structure as FT to convert to spm
 
-
 emg_tsv = [filetemplate,MEGruns{k},'_emg.tsv'];
 emg_json = [filetemplate,MEGruns{k},'_emg.json'];
 
 ftdat = load_emg_bids_tsv(emg_tsv, emg_json);
-
-%trigsampsEMG=trigtimes*TAEMGstruct.fsample;
 
 EMGspmfilename=[savepath,'\stepping_spmEMGobj_new__',sub,'_run',MEGruns{k}];
 
@@ -224,7 +219,7 @@ S.freq = 45;
 S.dir = 'twopass';
 Dfilt = spm_eeg_filter(S);
 
-%% low pass to EMG here
+%% low pass EMG
 
 S = [];
 S.D = DEMGfilt;
@@ -232,7 +227,7 @@ S.type = 'butterworth';
 S.band = 'low';
 S.freq = 45;
 S.dir = 'twopass';
-S.order = 5; %high freq noise so increased order
+S.order = 5; 
 DEMGfilt = spm_eeg_filter(S);
 
 %% band stop 50 hz
@@ -264,9 +259,9 @@ DEMGfilt = spm_eeg_filter(S);
 %     xlim([1 500])
 
 %% plot time series
-
-ftdat=spm2fieldtrip(Dfilt);
-ftdat=rmfield(ftdat,'hdr');
+% 
+% ftdat=spm2fieldtrip(Dfilt);
+% ftdat=rmfield(ftdat,'hdr');
 
 % cfg=[];
 % cfg.channel=ftdat.label(~contains(ftdat.label,'TRIG')& ~contains(ftdat.label,badchans));
@@ -317,7 +312,7 @@ ERDepochEMG = spm_eeg_epochs(S);
 
 
 MEGdim=size(ERDepoch,1);
-clonename=sprintf('%s_clone1%s_erd',sub(3:end),MEGruns{k});
+clonename=sprintf('%s_clone%s_erd',sub(3:end),MEGruns{k});
 newdataerd = clone(ERDepoch, clonename, [MEGdim+1 size(ERDepoch,2), size(ERDepoch,3)], 1);
 
 %add EMG data
@@ -354,7 +349,7 @@ count = 0;
 for r = 1:length(MEGruns)
     count = count+1;
    
-        S.D(count,:) = char(strcat(datpath,'sub-OP',sub(3:end),'\ses-001\meg\',sub(3:end),'_clone1',MEGruns(r),'_erd.mat'));
+        S.D(count,:) = char(strcat(datpath,'sub-OP',sub(3:end),'\ses-001\meg\',sub(3:end),'_clone',MEGruns(r),'_erd.mat'));
 
 end
 
@@ -370,7 +365,6 @@ S.D = DallERD;
 DallERD = spm_eeg_ft_artefact_visual(S); %this sets trials/chans to bad
 save(DallERD)
 
-%badchans=DallERD.chanlabels(DallERD.badchannels);
 
 
 

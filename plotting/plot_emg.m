@@ -1,4 +1,4 @@
-%% load values and plot on same fig
+%% load rectified smoothed median EMG from each participant and plot
 
 SubIDs={'00054', '00061', '00159'};
 
@@ -7,28 +7,18 @@ addpath('D:\stepping_data_opm')
 
 colors = linspecer(30);
 
-
 figure;
 hold on;
 
-colnum=3;
+colnum=3; %which color to use in linspecer map
 
 for sub=1:length(SubIDs)
 
     load(fullfile(save_dir,[SubIDs{sub},'_median_emg.mat']))
 
     time=time';
-    upperBound = medianValues + 0.5 * iqrValues;
-    lowerBound = medianValues - 0.5 * iqrValues;
-
-    % Plot the median with shaded IQR area
-
-    % Plot the shaded area representing the IQR
-    %fill([time, fliplr(time)], [upperBound, fliplr(lowerBound)], colors(colnum,:), 'FaceAlpha', 0.35, 'EdgeColor', 'none');
     
-    hold on
-    
-    % Plot the median line
+    % Plot median line
     plot(time, medianValues, 'color',colors(colnum,:), 'LineWidth', 4);
     set(gca, 'FontSize', 14); 
 

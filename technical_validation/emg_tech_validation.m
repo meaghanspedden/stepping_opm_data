@@ -1,4 +1,4 @@
-% rectify and smooth emg then plot
+% load EMG, rectify and smooth, save median for plotting 
 
 addpath('D:\spm')
 spm('defaults','eeg')
@@ -30,10 +30,9 @@ for k=1:size(D,3) %for each trial save envelope
 end
 
 medianValues=median(savemat,2);
-iqrValues=iqr(savemat,2);
 time=D.time;
 
-save(fullfile(save_dir, sprintf('%s_median_emg',sub)), 'medianValues', 'time', 'iqrValues')
+save(fullfile(save_dir, sprintf('%s_median_emg',sub)), 'medianValues', 'time')
 
 
 
