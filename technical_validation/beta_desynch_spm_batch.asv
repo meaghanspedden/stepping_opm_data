@@ -4,14 +4,14 @@ clearvars
 
 sub='OP00159';
 BF_file_dir = {['D:\steppingsave\',sub(3:end)]}; %where you want to save the BF file
-data_file={['D:\steppingsave\',sub(3:end),'\erd',sub(3:end),'_clone001_erd.mat']};
+%data_file={['D:\steppingsave\',sub(3:end),'\erd',sub(3:end),'_clone001_erd.mat']};
 
 %%----------OG-------------------------------------------
 %{'D:\STEPPING\Coh_results00054\Dec2023\beta erd final'}; 
 
 %data_file= {'D:\STEPPING\Coh_results00054\Dec2023\erd00054_clone001_erd.mat'};
 %data_file= {'D:\STEPPING\Coh_results00061\Dec2023\erd00061_clone001_erd.mat'};
-%data_file= {'D:\STEPPING\Coh_results00159\Dec2023\erd00159_clone1_erd.mat'};
+data_file= {'D:\STEPPING\Coh_results00159\Dec2023\erd00159_clone1_erd.mat'};
 
 %%------------------------------------------
 

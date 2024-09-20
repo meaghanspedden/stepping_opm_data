@@ -11,8 +11,8 @@ addpath(genpath('D:\stepping_data_opm')) %github repository path
 
 
 %Subject ID----------
-%sub='OP00054';
-sub='OP00061';
+sub='OP00054';
+%sub='OP00061';
 %sub='OP00159';
 
 
@@ -40,6 +40,7 @@ elseif strcmp(sub,'OP00054')
     MEGruns={'001','002','003','004','005'};
     posfile=[datpath,'sub-OP00054\ses-001\meg\ds_sub-OP00054_ses-001_task-stepping_positions.tsv'];
     MRIfile=[datpath,'sub-OP00054\ses-001\anat\OP00054_defaced.nii'];
+    
     badchans={'DO-Z', '35-Z', 'DK-Y','DK-Z','GD-Y','GD-Z','GD-X'};
     trigChan='NI-TRIG-1';
 
@@ -317,7 +318,7 @@ newdataerd = clone(ERDepoch, clonename, [MEGdim+1 size(ERDepoch,2), size(ERDepoc
 
 %add EMG data
 newdataerd(1:MEGdim, :, :)=ERDepoch(:,:,:);
-newdataerd(MEGdim+1,:,:)=ERDepochEMG(:,:,:);
+newdataerd(MEGdim+1,:,:)=ERDepochEMG(1,:,:);
 
 %add chanlabels and types
 newdataerd=chanlabels(newdataerd, 1:size(newdataerd,1),[ERDepoch.chanlabels,{'TA EMG'}]);
@@ -360,9 +361,9 @@ S.recode.labelnew = '#labelorg#';
 S.prefix = 'erd';
 DallERD = spm_eeg_merge(S);
 
-S = [];
-S.D = DallERD;
-DallERD = spm_eeg_ft_artefact_visual(S); %this sets trials/chans to bad
+% S = [];
+% S.D = DallERD;
+% DallERD = spm_eeg_ft_artefact_visual(S); %this sets trials/chans to bad
 save(DallERD)
 
 

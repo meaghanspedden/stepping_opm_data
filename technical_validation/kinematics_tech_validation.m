@@ -3,17 +3,17 @@
 clear all
 close all
 
-datdir='D:\STEPPING\sub-OP00054\ses-001\beh';
+datdir='D:\STEPPING\sub-OP00159\ses-001\beh';
 addpath(datdir)
 
 save_dir='D:\STEPPING\stepping paper\Sci data paper';
 addpath('D:\stepping_data_opm')
 
-SubjectID={'00054'};
+SubjectID={'00159'};
 
 plotop=1;
 nsteps=30; %pr block
-runs=1:5;
+runs=1:6;
 trlength=350; %trial length used for plotting
 
 allstepsPos=[];
@@ -49,7 +49,7 @@ for j=1:length(runs)
 
     %% loop through steps
     thisrunpos=[]; %save position for each run
-    
+    steps_to_plot=[]; %save indices of steps for one of the three box positions for plotting
     for k=1:nsteps 
        
         %select data for this trial/step
@@ -96,11 +96,18 @@ for j=1:length(runs)
     end
  
     allstepsPos=[allstepsPos;thisrunpos];
+    
+    BoxPosI=find(contains(headers,'BoxPos')); %box position
+    boxYs=xcoords(BoxPosI); %y coords 
+    which_steps=find(boxYs==boxYs(1)); %pick one box position and plot steps for this position
+    steps_to_plot=[steps_to_plot; which_steps];
+
 
 end
 
-%calculate median over steps for plotting
-medianValues=median(allstepsPos,1);
+
+%calculate median for a given step length for plotting?
+medianValues=median(allstepsPos(steps_to_plot,:),1);
 time=new_seconds_from_start(1:trlength);
 
 save(fullfile(save_dir,sprintf('med_pos_sub%s',SubjectID{:})), 'medianValues', 'time')
