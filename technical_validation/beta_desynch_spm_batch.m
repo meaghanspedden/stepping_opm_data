@@ -2,9 +2,9 @@
 
 clearvars
 
-sub='OP00159';
-BF_file_dir = {['D:\steppingsave\',sub(3:end)]}; %where you want to save the BF file
-data_file={['D:\steppingsave\',sub(3:end),'\erd',sub(3:end),'_clone001_erd.mat']};
+sub='OP00061';
+BF_file_dir = {['D:\steppingsave_v1\',sub(3:end)]}; %where you want to save the BF file
+data_file={['D:\steppingsave_v1\',sub(3:end),'\erd',sub(3:end),'_clone001_erd.mat']};
 
 %%----------OG-------------------------------------------
 %{'D:\STEPPING\Coh_results00054\Dec2023\beta erd final'}; 
@@ -19,8 +19,12 @@ freqband=[15 30];
 
 % time periods for stepping identified by visual inspection of EMG signal
 
-if strcmp(sub, 'OP00054') || strcmp(sub, 'OP00061')
-    stepping_time=[4200 4700];
+% if strcmp(sub, 'OP00054') || strcmp(sub, 'OP00061')
+%     stepping_time=[4200 4700];
+if strcmp(sub, 'OP00054')
+    stepping_time = [4000 4500];
+elseif strcmp(sub, 'OP00061')
+    stepping_time = [4100 4600];
 elseif strcmp(sub, 'OP00159')
     stepping_time = [4500  5000];
 else
@@ -94,7 +98,7 @@ matlabbatch = [];
 % Set up the smoothing parameters
 matlabbatch{1}.spm.spatial.smooth.fwhm = [10 10 10];
 matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-matlabbatch{1}.spm.spatial.smooth.im = 0;
+matlabbatch{1}.spm.spatial.smooth.im = 1; %does this contain
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
 
 % Assign all files to the batch at once
@@ -150,7 +154,7 @@ matlabbatch = [];
 % Set up the smoothing parameters
 matlabbatch{1}.spm.spatial.smooth.fwhm = [10 10 10];
 matlabbatch{1}.spm.spatial.smooth.dtype = 0;
-matlabbatch{1}.spm.spatial.smooth.im = 0;
+matlabbatch{1}.spm.spatial.smooth.im = 1;
 matlabbatch{1}.spm.spatial.smooth.prefix = 's';
 
 % Assign all files to the batch at once

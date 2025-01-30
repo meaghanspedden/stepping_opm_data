@@ -5,8 +5,8 @@ spm('defaults','eeg')
 
 save_dir='D:\STEPPING\stepping paper\Sci data paper';
 
-sub='00054'; %load preproc SPM file
-D=spm_eeg_load('D:\STEPPING\Coh_results00054\Dec2023\erd00054_clone001_erd.mat');
+sub='00061'; %load preproc SPM file
+D=spm_eeg_load('D:\STEPPING\Coh_results00061\Dec2023\erd00061_clone001_erd.mat');
 
 labs=D.chanlabels;
 EMGidx=find(contains(labs, 'TA EMG'));
@@ -24,7 +24,7 @@ for k=1:size(D,3) %for each trial save envelope
 
     savemat(:,k)=envelope;
 
-    % plot(D.time, envelope)
+    %plot(D.time, envelope)
     % hold on
 
 end
@@ -35,5 +35,6 @@ time=D.time;
 save(fullfile(save_dir, sprintf('%s_median_emg',sub)), 'medianValues', 'time')
 
 
-
+figure
+plot(D.time, medianValues)
 

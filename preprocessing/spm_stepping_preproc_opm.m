@@ -11,13 +11,13 @@ addpath(genpath('D:\stepping_data_opm')) %github repository path
 
 
 %Subject ID----------
-sub='OP00054';
+%sub='OP00054';
 %sub='OP00061';
-%sub='OP00159';
+sub='OP00159';
 
 
-datpath='D:\STEPPING_bids\';
-savepath=['D:\steppingsave\',sub(3:end)];
+datpath='D:\STEPPING_bids_v1\';
+savepath=['D:\steppingsave_v1\',sub(3:end)];
 
 if ~exist(savepath,'dir')
     mkdir(savepath)
@@ -30,7 +30,7 @@ cd(savepath)
 if strcmp(sub,'OP00061')
 
     MEGruns={'001','002','003','004','005'};
-    posfile=[datpath,'sub-OP00061\ses-001\meg\ds_sub-OP00061_ses-001_task-stepping_positions.tsv'];
+    posfile=[datpath,'sub-OP00061\ses-001\meg\sub-OP00061_ses-001_task-stepping_positions.tsv'];
     MRIfile=[datpath,'sub-OP00061\ses-001\anat\OP00061_defaced.nii'];
     badchans='G2-DH';
     trigChan='NI-TRIG-1';
@@ -38,7 +38,7 @@ if strcmp(sub,'OP00061')
 
 elseif strcmp(sub,'OP00054')
     MEGruns={'001','002','003','004','005'};
-    posfile=[datpath,'sub-OP00054\ses-001\meg\ds_sub-OP00054_ses-001_task-stepping_positions.tsv'];
+    posfile=[datpath,'sub-OP00054\ses-001\meg\sub-OP00054_ses-001_task-stepping_positions.tsv'];
     MRIfile=[datpath,'sub-OP00054\ses-001\anat\OP00054_defaced.nii'];
     
     badchans={'DO-Z', '35-Z', 'DK-Y','DK-Z','GD-Y','GD-Z','GD-X'};
@@ -64,14 +64,14 @@ end
 
 for k=1:length(MEGruns)
 
-    if strcmp(sub,'OP00159') % no ds prefix for Neuro 1 acquisition
+   % if strcmp(sub,'OP00159') % no ds prefix for Neuro 1 acquisition
 
         filetemplate=[datpath,'sub-OP',sub(3:end),'\ses-001\meg\sub-OP',sub(3:end),'_ses-001_task-stepping_run-'];
 
-    else %og acquisition system recordings have ds prefix
-        filetemplate=[datpath,'sub-OP',sub(3:end),'\ses-001\meg\ds_sub-OP',sub(3:end),'_ses-001_task-stepping_run-'];
+   % else %og acquisition system recordings have ds prefix
+       % filetemplate=[datpath,'sub-OP',sub(3:end),'\ses-001\meg\ds_sub-OP',sub(3:end),'_ses-001_task-stepping_run-'];
 
-    end
+  %  end
 
     %% load opm data ------------------------------------
 
@@ -81,6 +81,7 @@ for k=1:length(MEGruns)
     S.channels = [filetemplate,MEGruns{k},'_channels.tsv'];
     S.positions = posfile;
     S.precision = 'single';
+    %S.precision = 'double';
     S.sMRI = MRIfile;
 
     D = spm_opm_create(S);
@@ -89,8 +90,10 @@ for k=1:length(MEGruns)
 
 %% load emg data, structure as FT to convert to spm
 
-emg_tsv = [filetemplate,MEGruns{k},'_emg.tsv'];
-emg_json = [filetemplate,MEGruns{k},'_emg.json'];
+filetemplateEMG=strrep(filetemplate, 'meg', 'emg');
+
+emg_tsv = [filetemplateEMG,MEGruns{k},'_emg.tsv'];
+emg_json = [filetemplateEMG,MEGruns{k},'_emg.json'];
 
 ftdat = load_emg_bids_tsv(emg_tsv, emg_json);
 
