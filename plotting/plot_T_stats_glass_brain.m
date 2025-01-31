@@ -17,7 +17,7 @@ for s = 1:length(subs)
 
     thissub=subs{s};
 
-    SPMpath=['D:\steppingsave\', thissub, '\spm\'];
+    SPMpath=['D:\steppingsave_v1\', thissub, '\spm\'];
 
 
     matlabbatch=[];

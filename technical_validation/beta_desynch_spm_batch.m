@@ -1,8 +1,11 @@
 %% Technical validation analysis
 
 clearvars
+addpath('D:\spm') %spm path
+spm('defaults','EEG')
+%spm eeg %apparently need to opne the gui to run batch? prob a way around this...
 
-sub='OP00061';
+sub='OP00159';
 BF_file_dir = {['D:\steppingsave_v1\',sub(3:end)]}; %where you want to save the BF file
 data_file={['D:\steppingsave_v1\',sub(3:end),'\erd',sub(3:end),'_clone001_erd.mat']};
 
@@ -21,6 +24,7 @@ freqband=[15 30];
 
 % if strcmp(sub, 'OP00054') || strcmp(sub, 'OP00061')
 %     stepping_time=[4200 4700];
+
 if strcmp(sub, 'OP00054')
     stepping_time = [4000 4500];
 elseif strcmp(sub, 'OP00061')
