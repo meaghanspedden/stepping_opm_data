@@ -1,4 +1,4 @@
-% stepping preprocessing for tech validation - sci data
+% stepping preprocessing for tech validation
 
 restoredefaultpath
 clear all
@@ -14,6 +14,8 @@ addpath(genpath('D:\stepping_data_opm')) %github repository path
 %sub='OP00054';
 %sub='OP00061';
 sub='OP00159';
+
+hfc_amm = 1;
 
 
 datpath='D:\STEPPING_bids_v1\';
@@ -40,7 +42,7 @@ elseif strcmp(sub,'OP00054')
     MEGruns={'001','002','003','004','005'};
     posfile=[datpath,'sub-OP00054\ses-001\meg\sub-OP00054_ses-001_task-stepping_positions.tsv'];
     MRIfile=[datpath,'sub-OP00054\ses-001\anat\OP00054_defaced.nii'];
-    
+
     badchans={'DO-Z', '35-Z', 'DK-Y','DK-Z','GD-Y','GD-Z','GD-X'};
     trigChan='NI-TRIG-1';
 
@@ -81,258 +83,264 @@ for k=1:length(MEGruns)
 
     close all
 
-%% load emg data, structure as FT to convert to spm
+    %% load emg data, structure as FT to convert to spm
 
-filetemplateEMG=strrep(filetemplate, 'meg', 'emg');
+    filetemplateEMG=strrep(filetemplate, 'meg', 'emg');
 
-emg_tsv = [filetemplateEMG,MEGruns{k},'_emg.tsv'];
-emg_json = [filetemplateEMG,MEGruns{k},'_emg.json'];
+    emg_tsv = [filetemplateEMG,MEGruns{k},'_emg.tsv'];
+    emg_json = [filetemplateEMG,MEGruns{k},'_emg.json'];
 
-ftdat = load_emg_bids_tsv(emg_tsv, emg_json);
+    ftdat = load_emg_bids_tsv(emg_tsv, emg_json);
 
-EMGspmfilename=[savepath,'\stepping_spmEMGobj_new__',sub,'_run',MEGruns{k}];
+    EMGspmfilename=[savepath,'\stepping_spmEMGobj_new__',sub,'_run',MEGruns{k}];
 
-D_EMG=spm_eeg_ft2spm(ftdat, EMGspmfilename);
+    D_EMG=spm_eeg_ft2spm(ftdat, EMGspmfilename);
 
-%% look at psd for EMG
-S = [];
-S.D = D_EMG;
-S.plot = 1;
-S.triallength = 2000;
-S.wind = @hanning;
-spm_opm_psd(S);
-xlim([1,100])
+    %% look at psd for EMG
+    S = [];
+    S.D = D_EMG;
+    S.plot = 1;
+    S.triallength = 2000;
+    S.wind = @hanning;
+    spm_opm_psd(S);
+    xlim([1,100])
 
-% plot time series
-figure
-plot(ftdat.time{1},ftdat.trial{1}(1,:))
-hold on
-plot(ftdat.time{1},ftdat.trial{1}(2,:)) %trigger
+    % plot time series
+    figure
+    plot(ftdat.time{1},ftdat.trial{1}(1,:))
+    hold on
+    plot(ftdat.time{1},ftdat.trial{1}(2,:)) %trigger
 
-%% resample MEG to match EMG
+    %% resample MEG to match EMG
 
-S=[];
-S.D=D;
-S.fsample_new=1000;
-Ds=spm_eeg_downsample(S);
+    S=[];
+    S.D=D;
+    S.fsample_new=1000;
+    Ds=spm_eeg_downsample(S);
 
-%% look at psd
+    %% look at psd
 
-if isempty(badchans)
-    badchanidx=[];
-else
-    badchanidx=find(contains(Ds.chanlabels,badchans));
-    Ds=Ds.badchannels(badchanidx,1);
-end
+    if isempty(badchans)
+        badchanidx=[];
+    else
+        badchanidx=find(contains(Ds.chanlabels,badchans));
+        Ds=Ds.badchannels(badchanidx,1);
+    end
 
-MEGchans=find(contains(D.chantype,'MEGMAG')); %idx
+    MEGchans=find(contains(D.chantype,'MEGMAG')); %idx
 
-chanidxtoplot =setdiff(MEGchans,badchanidx);
-
-S = [];
-S.D = Ds;
-S.plot = 1;
-S.channels = Ds.chanlabels(chanidxtoplot);
-S.triallength = 3000;
-S.wind = @hanning;
-spm_opm_psd(S);
-xlim([1,100])
-ylim([10^1 10^5])
-title('Pre hfc/amm')
-
-
-%% hfc or amm
-
-if strcmp(sub,'OP00159') %nchannels >120
+    chanidxtoplot =setdiff(MEGchans,badchanidx);
 
     S = [];
     S.D = Ds;
-    S.li = 9;
-    S.le = 3;
-    S.corrLim = 0.98;
-    hfD = spm_opm_amm(S);
+    S.plot = 1;
+    S.channels = Ds.chanlabels(chanidxtoplot);
+    S.triallength = 3000;
+    S.wind = @hanning;
+    spm_opm_psd(S);
+    xlim([1,100])
+    %ylim([10^1 10^5])
+    title('Pre hfc/amm')
 
-else %nchannels < 120
+
+    %% hfc or amm
+
+    if hfc_amm
+
+        if strcmp(sub,'OP00159') %nchannels >120
+
+            S = [];
+            S.D = Ds;
+            S.li = 9;
+            S.le = 3;
+            S.corrLim = 0.98;
+            hfD = spm_opm_amm(S);
+
+        else %nchannels < 120
+
+            S = [];
+            S.D = Ds;
+            S.usebadchans=0;
+            [hfD, Yinds] = spm_opm_hfc(S);
+
+        end
+
+
+        S = [];
+        S.D = hfD;
+        S.plot = 1;
+        S.channels = Ds.chanlabels(chanidxtoplot);
+        S.triallength = 2000;
+        S.wind = @hanning;
+        spm_opm_psd(S);
+        xlim([1,100])
+        %ylim([10^1 10^5])
+        title('post hfc/amm')
+
+
+        S = [];
+        S.D1 = Ds;
+        S.D2=hfD;
+        S.plot = 1;
+        S.channels = Ds.chanlabels(chanidxtoplot);
+        S.triallength = 2000;
+        S.wind = @hanning;
+        [shield,f] = spm_opm_rpsd(S);
+        xlim([1,100])
+        %legend(Ds.chanlabels(chanidxtoplot))
+        title('shielding factor (db)')
+    else
+        hfD=Ds;
+    end
+
+    %% hp filter MEG
 
     S = [];
-    S.D = Ds;
-    S.usebadchans=0;
-    [hfD, Yinds] = spm_opm_hfc(S);
+    S.D = hfD;
+    S.type = 'butterworth';
+    S.band = 'high';
+    S.freq = 5;
+    S.dir = 'twopass';
+    Dfilt = spm_eeg_filter(S);
 
-end
+    %% hp filter EMG
 
+    S=[];
+    S.type = 'butterworth';
+    S.band = 'high';
+    S.dir = 'twopass';
+    S.freq = 10;
+    S.D=D_EMG;
+    DEMGfilt=spm_eeg_filter(S);
 
-S = [];
-S.D = hfD;
-S.plot = 1;
-S.channels = Ds.chanlabels(chanidxtoplot);
-S.triallength = 2000;
-S.wind = @hanning;
-spm_opm_psd(S);
-xlim([1,100])
-ylim([10^1 10^5])
-title('post hfc/amm')
+    %% low pass MEG
 
+    S = [];
+    S.D = Dfilt;
+    S.type = 'butterworth';
+    S.band = 'low';
+    S.freq = 45;
+    S.dir = 'twopass';
+    Dfilt = spm_eeg_filter(S);
 
-S = [];
-S.D1 = Ds;
-S.D2=hfD;
-S.plot = 1;
-S.channels = Ds.chanlabels(chanidxtoplot);
-S.triallength = 2000;
-S.wind = @hanning;
-[shield,f] = spm_opm_rpsd(S);
-xlim([1,100])
-%legend(Ds.chanlabels(chanidxtoplot))
-title('shielding factor (db)')
+    %% low pass EMG
 
-%% hp filter MEG
+    S = [];
+    S.D = DEMGfilt;
+    S.type = 'butterworth';
+    S.band = 'low';
+    S.freq = 45;
+    S.dir = 'twopass';
+    S.order = 5;
+    DEMGfilt = spm_eeg_filter(S);
 
-S = [];
-S.D = hfD;
-S.type = 'butterworth';
-S.band = 'high';
-S.freq = 5;
-S.dir = 'twopass';
-Dfilt = spm_eeg_filter(S);
+    %% band stop 50 hz
 
-%% hp filter EMG
+    S = [];
+    S.D = Dfilt;
+    S.type = 'butterworth';
+    S.band = 'stop';
+    S.freq = [49 51];
+    S.dir = 'twopass';
+    Dfilt = spm_eeg_filter(S);
 
-S=[];
-S.type = 'butterworth';
-S.band = 'high';
-S.dir = 'twopass';
-S.freq = 10;
-S.D=D_EMG;
-DEMGfilt=spm_eeg_filter(S);
+    S = [];
+    S.D = DEMGfilt;
+    S.type = 'butterworth';
+    S.band = 'stop';
+    S.freq = [49 51];
+    S.dir = 'twopass';
+    DEMGfilt = spm_eeg_filter(S);
 
-%% low pass MEG
+    %% plot EMG power spectrum
 
-S = [];
-S.D = Dfilt;
-S.type = 'butterworth';
-S.band = 'low';
-S.freq = 45;
-S.dir = 'twopass';
-Dfilt = spm_eeg_filter(S);
+    %     S = [];
+    %     S.D = DEMGfilt;
+    %     S.plot = 1;
+    %     S.triallength = 2000;
+    %     S.wind = @hanning;
+    %     spm_opm_psd(S);
+    %     xlim([1 500])
 
-%% low pass EMG
+    %% plot time series
+    %
+    % ftdat=spm2fieldtrip(Dfilt);
+    % ftdat=rmfield(ftdat,'hdr');
 
-S = [];
-S.D = DEMGfilt;
-S.type = 'butterworth';
-S.band = 'low';
-S.freq = 45;
-S.dir = 'twopass';
-S.order = 5; 
-DEMGfilt = spm_eeg_filter(S);
-
-%% band stop 50 hz
-
-S = [];
-S.D = Dfilt;
-S.type = 'butterworth';
-S.band = 'stop';
-S.freq = [49 51];
-S.dir = 'twopass';
-Dfilt = spm_eeg_filter(S);
-
-S = [];
-S.D = DEMGfilt;
-S.type = 'butterworth';
-S.band = 'stop';
-S.freq = [49 51];
-S.dir = 'twopass';
-DEMGfilt = spm_eeg_filter(S);
-
-%% plot EMG power spectrum
-
-%     S = [];
-%     S.D = DEMGfilt;
-%     S.plot = 1;
-%     S.triallength = 2000;
-%     S.wind = @hanning;
-%     spm_opm_psd(S);
-%     xlim([1 500])
-
-%% plot time series
-% 
-% ftdat=spm2fieldtrip(Dfilt);
-% ftdat=rmfield(ftdat,'hdr');
-
-% cfg=[];
-% cfg.channel=ftdat.label(~contains(ftdat.label,'TRIG')& ~contains(ftdat.label,badchans));
-% ft_databrowser(cfg,ftdat)
+    % cfg=[];
+    % cfg.channel=ftdat.label(~contains(ftdat.label,'TRIG')& ~contains(ftdat.label,badchans));
+    % ft_databrowser(cfg,ftdat)
 
 
-close all
+    close all
 
-%% find MEG trigger times
+    %% find MEG trigger times
 
-trigIdx=find(strcmp(Dfilt.chanlabels,trigChan));
+    trigIdx=find(strcmp(Dfilt.chanlabels,trigChan));
 
-tChan=D(trigIdx,:);
+    tChan=D(trigIdx,:);
 
-thresh=1;
+    thresh=1;
 
-evSamples=find(diff(tChan<thresh)==1)-1;
+    evSamples=find(diff(tChan<thresh)==1)-1;
 
-evSamples=round((evSamples/(D.fsample/Ds.fsample))); %because downsampled
+    evSamples=round((evSamples/(D.fsample/Ds.fsample))); %because downsampled
 
-%% epoch MEG based on trial start trigger from -1.5 to 3 sec
+    %% epoch MEG based on trial start trigger from -1.5 to 3 sec
 
-S = [];
-S.D = Dfilt;
-S.bc = 0;
-S.prefix = 'ep_erd';
-S.trl = ([evSamples'-(Dfilt.fsample*1.5) evSamples'+(Dfilt.fsample*3) ones(length(evSamples),1)*Dfilt.fsample*1.5]);
-ERDepoch = spm_eeg_epochs(S);
+    S = [];
+    S.D = Dfilt;
+    S.bc = 0;
+    S.prefix = 'ep_erd';
+    S.trl = ([evSamples'-(Dfilt.fsample*1.5) evSamples'+(Dfilt.fsample*3) ones(length(evSamples),1)*Dfilt.fsample*1.5]);
+    ERDepoch = spm_eeg_epochs(S);
 
-%% do the same for EMG
-EMG_chans = chanlabels(D_EMG);
-trigIdxEMG=find(contains(EMG_chans,'Trigger'));
-tChanEMG=D_EMG(trigIdxEMG,:);
+    %% do the same for EMG
 
-thresh=0.9;
+    EMG_chans = chanlabels(D_EMG);
+    trigIdxEMG=find(contains(EMG_chans,'Trigger'));
+    tChanEMG=D_EMG(trigIdxEMG,:);
 
-evSamples=find(diff(tChanEMG<thresh)==1)-1;
+    thresh=0.9;
 
-
-S = [];
-S.D = DEMGfilt;
-S.bc = 0;
-S.trl = ([evSamples'-(DEMGfilt.fsample*1.5) evSamples'+(DEMGfilt.fsample*3) ones(length(evSamples),1)*DEMGfilt.fsample*1.5]);
-ERDepochEMG = spm_eeg_epochs(S);
+    evSamples=find(diff(tChanEMG<thresh)==1)-1;
 
 
-%% clone data and add emg channel (to make data set with both EMG and MEG)
+    S = [];
+    S.D = DEMGfilt;
+    S.bc = 0;
+    S.trl = ([evSamples'-(DEMGfilt.fsample*1.5) evSamples'+(DEMGfilt.fsample*3) ones(length(evSamples),1)*DEMGfilt.fsample*1.5]);
+    ERDepochEMG = spm_eeg_epochs(S);
 
 
-MEGdim=size(ERDepoch,1);
-clonename=sprintf('%s_clone%s_erd',sub(3:end),MEGruns{k});
-newdataerd = clone(ERDepoch, clonename, [MEGdim+1 size(ERDepoch,2), size(ERDepoch,3)], 1);
+    %% clone data and add emg channel (to make data set with both EMG and MEG)
 
-%add EMG data
-newdataerd(1:MEGdim, :, :)=ERDepoch(:,:,:);
-newdataerd(MEGdim+1,:,:)=ERDepochEMG(1,:,:);
 
-%add chanlabels and types
-newdataerd=chanlabels(newdataerd, 1:size(newdataerd,1),[ERDepoch.chanlabels,{'TA EMG'}]);
+    MEGdim=size(ERDepoch,1);
+    clonename=sprintf('%s_clone%s_erd',sub(3:end),MEGruns{k});
+    newdataerd = clone(ERDepoch, clonename, [MEGdim+1 size(ERDepoch,2), size(ERDepoch,3)], 1);
 
-trigsIdx=find(contains(newdataerd.chanlabels,'TRIG') | contains(newdataerd.chanlabels,'AI') | contains(newdataerd.chanlabels,'DI') | contains(newdataerd.chanlabels,'Data'));
+    %add EMG data
+    newdataerd(1:MEGdim, :, :)=ERDepoch(:,:,:);
+    newdataerd(MEGdim+1,:,:)=ERDepochEMG(1,:,:);
 
-newdataerd=chantype(newdataerd,1:MEGdim,'MEG');
-newdataerd=chantype(newdataerd,trigsIdx,'Other');
-newdataerd=chantype(newdataerd,MEGdim+1,'EMG');
+    %add chanlabels and types
+    newdataerd=chanlabels(newdataerd, 1:size(newdataerd,1),[ERDepoch.chanlabels,{'TA EMG'}]);
 
-newdataerd=units(newdataerd,1:MEGdim, 'fT');
-newdataerd=units(newdataerd,trigsIdx,'unknown');
+    trigsIdx=find(contains(newdataerd.chanlabels,'TRIG') | contains(newdataerd.chanlabels,'AI') | contains(newdataerd.chanlabels,'DI') | contains(newdataerd.chanlabels,'Data'));
 
-if ~isempty(badchanidx)
-    newdataerd=newdataerd.badchannels(badchanidx, 1);
-end
+    newdataerd=chantype(newdataerd,1:MEGdim,'MEG');
+    newdataerd=chantype(newdataerd,trigsIdx,'Other');
+    newdataerd=chantype(newdataerd,MEGdim+1,'EMG');
 
-save(newdataerd)
+    newdataerd=units(newdataerd,1:MEGdim, 'fT');
+    newdataerd=units(newdataerd,trigsIdx,'unknown');
+
+    if ~isempty(badchanidx)
+        newdataerd=newdataerd.badchannels(badchanidx, 1);
+    end
+
+    save(newdataerd)
 
 
 end %loop through runs
@@ -345,8 +353,8 @@ S = [];
 count = 0;
 for r = 1:length(MEGruns)
     count = count+1;
-   
-        S.D(count,:) = char(strcat(datpath,'sub-OP',sub(3:end),'\ses-001\meg\',sub(3:end),'_clone',MEGruns(r),'_erd.mat'));
+
+    S.D(count,:) = char(strcat(datpath,'sub-OP',sub(3:end),'\ses-001\meg\',sub(3:end),'_clone',MEGruns(r),'_erd.mat'));
 
 end
 
@@ -354,13 +362,19 @@ end
 S.recode.file = '.*';
 S.recode.labelorg = '.*';
 S.recode.labelnew = '#labelorg#';
-S.prefix = 'erd';
-DallERD = spm_eeg_merge(S);
 
-% S = [];
-% S.D = DallERD;
-% DallERD = spm_eeg_ft_artefact_visual(S); %this sets trials/chans to bad
-save(DallERD)
+if hfc_amm
+    S.prefix = 'erd';
+else
+    S.prefix = 'erd_nofiltering';
+end
+    DallERD = spm_eeg_merge(S);
+
+    % S = [];
+    % S.D = DallERD;
+    % DallERD = spm_eeg_ft_artefact_visual(S); %this sets trials/chans to bad
+    
+    save(DallERD)
 
 
 

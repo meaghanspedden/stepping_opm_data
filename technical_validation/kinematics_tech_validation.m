@@ -9,7 +9,7 @@ addpath(datdir)
 save_dir='D:\STEPPING\stepping paper\Sci data paper';
 addpath('D:\stepping_data_opm')
 
-SubjectID={'00159'};
+SubjectID={'00061'};
 
 plotop=1;
 nsteps=30; %pr block
@@ -97,6 +97,8 @@ for j=1:length(runs)
  
     allstepsPos=[allstepsPos;thisrunpos];
     
+
+
     BoxPosI=find(contains(headers,'BoxPos')); %box position
     boxYs=xcoords(BoxPosI); %y coords 
     which_steps=find(boxYs==boxYs(1)); %pick one box position and plot steps for this position
@@ -106,7 +108,24 @@ for j=1:length(runs)
 end
 
 
-%calculate median for a given step length for plotting?
+diff_values = abs(max(allstepsPos, [], 2) - min(allstepsPos, [], 2));
+h=histogram(diff_values);
+h.FaceColor = [0.0, 0.6, 0.6];  % Set color to a nice green
+h.EdgeColor = 'k';  % Set edge color of bars to black
+h.FaceAlpha = 0.7;  % Set transparency for the bars
+h.LineWidth=1.5;
+xlabel('Distance (m)', 'FontSize', 14);
+ylabel('Frequency', 'FontSize', 14);
+ax = gca;  % Get current axis
+ax.XAxis.FontSize = 12;  % Increase font size for x-axis
+ax.YAxis.FontSize = 12;  % Increase font size for y-axis
+box off
+
+cd('D:\STEPPING\figures')
+%print(gcf, 'distancehistogram', '-dpdf', '-painters')
+
+
+%calculate median for a given step length for plotting
 medianValues=median(allstepsPos(steps_to_plot,:),1);
 time=new_seconds_from_start(1:trlength);
 
