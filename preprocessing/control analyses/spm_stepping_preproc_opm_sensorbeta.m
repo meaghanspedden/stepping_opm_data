@@ -11,11 +11,12 @@ addpath(genpath('D:\stepping_data_opm')) %github repository path
 
 
 %Subject ID----------
-sub='OP00054';
+%sub='OP00054';
 %sub='OP00061';
-%sub='OP00159';
+sub='OP00159';
 
-hfc_amm = 1;
+hfc_amm = 0;
+temp_filt=1;
 
 
 datpath='D:\STEPPING_bids_v1\';
@@ -97,19 +98,19 @@ for k=1:length(MEGruns)
     D_EMG=spm_eeg_ft2spm(ftdat, EMGspmfilename);
 
     %% look at psd for EMG
-    S = [];
-    S.D = D_EMG;
-    S.plot = 1;
-    S.triallength = 2000;
-    S.wind = @hanning;
-    spm_opm_psd(S);
-    xlim([1,100])
-
-    % plot time series
-    figure
-    plot(ftdat.time{1},ftdat.trial{1}(1,:))
-    hold on
-    plot(ftdat.time{1},ftdat.trial{1}(2,:)) %trigger
+%     S = [];
+%     S.D = D_EMG;
+%     S.plot = 1;
+%     S.triallength = 2000;
+%     S.wind = @hanning;
+%     spm_opm_psd(S);
+%     xlim([1,100])
+% 
+%     % plot time series
+%     figure
+%     plot(ftdat.time{1},ftdat.trial{1}(1,:))
+%     hold on
+%     plot(ftdat.time{1},ftdat.trial{1}(2,:)) %trigger
 
     %% resample MEG to match EMG
 
@@ -198,7 +199,7 @@ for k=1:length(MEGruns)
     end
 
     %% hp filter MEG
-
+if temp_filt
     S = [];
     S.D = hfD;
     S.type = 'butterworth';
@@ -255,6 +256,10 @@ for k=1:length(MEGruns)
     S.freq = [49 51];
     S.dir = 'twopass';
     DEMGfilt = spm_eeg_filter(S);
+else
+    DEMGfilt=D_EMG;
+    Dfilt=hfD;
+end
 
     %% plot EMG power spectrum
 
@@ -295,7 +300,7 @@ for k=1:length(MEGruns)
     S = [];
     S.D = Dfilt;
     S.bc = 0;
-    S.prefix = 'ep_erd';
+    S.prefix = 'ep_erd_tempfilt';
     S.trl = ([evSamples'-(Dfilt.fsample*1.5) evSamples'+(Dfilt.fsample*3) ones(length(evSamples),1)*Dfilt.fsample*1.5]);
     ERDepoch = spm_eeg_epochs(S);
 
@@ -321,7 +326,7 @@ for k=1:length(MEGruns)
 
 
     MEGdim=size(ERDepoch,1);
-    clonename=sprintf('%s_clone%s_erd',sub(3:end),MEGruns{k});
+    clonename=sprintf('%s_clone%s_erd_tempfilt',sub(3:end),MEGruns{k});
     newdataerd = clone(ERDepoch, clonename, [MEGdim+1 size(ERDepoch,2), size(ERDepoch,3)], 1);
 
     %add EMG data
@@ -358,7 +363,7 @@ count = 0;
 for r = 1:length(MEGruns)
     count = count+1;
 
-    S.D(count,:) = char(strcat(datpath,'sub-OP',sub(3:end),'\ses-001\meg\',sub(3:end),'_clone',MEGruns(r),'_erd.mat'));
+    S.D(count,:) = char(strcat(datpath,'sub-OP',sub(3:end),'\ses-001\meg\',sub(3:end),'_clone',MEGruns(r),'_erd_tempfilt.mat'));
 
 end
 
@@ -370,7 +375,7 @@ S.recode.labelnew = '#labelorg#';
 if hfc_amm
     S.prefix = 'erd';
 else
-    S.prefix = 'erd_nofiltering';
+    S.prefix = 'erd_tempfilt';
 end
     DallERD = spm_eeg_merge(S);
 

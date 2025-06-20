@@ -6,21 +6,9 @@ spm('defaults','EEG')
 
 
 sub='OP00159';
-BF_file_dir = {['D:\steppingsave_v1\',sub(3:end)]}; %where you want to save the BF file
-data_file={['D:\steppingsave_v1\',sub(3:end),'\erd',sub(3:end),'_clone001_erd.mat']};
+BF_file_dir = {['D:\steppingsave_v1\',sub(3:end),'\twoaxes']}; %where you want to save the BF file
+data_file={'D:\steppingsave_v1\00159\erd_2axes00159_clone001_erd_2axes.mat'};
 
-
-
-
-
-% 
-% D=spm_eeg_load(data_file)
-% ntrials=size(D(:,:,:),3)
-% newntrials=120;
-% ind_use=randperm(150,1,120);
-% ind_dontuse=setxor(1:150,ind_use)
-% D=conditions(D, ind, 'COND1')
-% D=conditions(D, ind, 'COND2')
 
 
 
@@ -79,13 +67,13 @@ matlabbatch{3}.spm.tools.beamforming.features.plugin.csd.taper = 'dpss';
 matlabbatch{3}.spm.tools.beamforming.features.plugin.csd.keepreal = 0;
 matlabbatch{3}.spm.tools.beamforming.features.plugin.csd.hanning = 0;
 
-if spatial_filt_flag
+%if spatial_filt_flag
 
     matlabbatch{3}.spm.tools.beamforming.features.regularisation.clifftrunc.zthresh = -1;
     matlabbatch{3}.spm.tools.beamforming.features.regularisation.clifftrunc.omit = 0;
-else
-    matlabbatch{3}.spm.tools.beamforming.features.regularisation.manual.lambda = 5;
-end
+% else
+%     matlabbatch{3}.spm.tools.beamforming.features.regularisation.manual.lambda = 5;
+% end
 
 matlabbatch{3}.spm.tools.beamforming.features.bootstrap = false;
 matlabbatch{3}.spm.tools.beamforming.features.visualise = 1;

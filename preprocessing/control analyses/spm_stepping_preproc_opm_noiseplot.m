@@ -67,7 +67,7 @@ end
 for k=1:length(MEGruns)
 
 
-    filetemplate=[datpath,'sub-OP',sub(3:end),'\ses-001\meg\sub-OP',sub(3:end),'_ses-001_task-stepping_run-'];
+    filetemplate=[datpath,'sub-OP',sub(3:end),'\ses-001\meg\sub-OP',sub(3:end),'_ses-001_task-noise_run-'];
 
     %% load opm data ------------------------------------
 
@@ -85,31 +85,31 @@ for k=1:length(MEGruns)
 
     %% load emg data, structure as FT to convert to spm
 
-    filetemplateEMG=strrep(filetemplate, 'meg', 'emg');
-
-    emg_tsv = [filetemplateEMG,MEGruns{k},'_emg.tsv'];
-    emg_json = [filetemplateEMG,MEGruns{k},'_emg.json'];
-
-    ftdat = load_emg_bids_tsv(emg_tsv, emg_json);
-
-    EMGspmfilename=[savepath,'\stepping_spmEMGobj_new__',sub,'_run',MEGruns{k}];
-
-    D_EMG=spm_eeg_ft2spm(ftdat, EMGspmfilename);
+%     filetemplateEMG=strrep(filetemplate, 'meg', 'emg');
+% 
+%     emg_tsv = [filetemplateEMG,MEGruns{k},'_emg.tsv'];
+%     emg_json = [filetemplateEMG,MEGruns{k},'_emg.json'];
+% 
+%     ftdat = load_emg_bids_tsv(emg_tsv, emg_json);
+% 
+%     EMGspmfilename=[savepath,'\stepping_spmEMGobj_new__',sub,'_run',MEGruns{k}];
+% 
+%     D_EMG=spm_eeg_ft2spm(ftdat, EMGspmfilename);
 
     %% look at psd for EMG
-    S = [];
-    S.D = D_EMG;
-    S.plot = 1;
-    S.triallength = 2000;
-    S.wind = @hanning;
-    spm_opm_psd(S);
-    xlim([1,100])
-
-    % plot time series
-    figure
-    plot(ftdat.time{1},ftdat.trial{1}(1,:))
-    hold on
-    plot(ftdat.time{1},ftdat.trial{1}(2,:)) %trigger
+%     S = [];
+%     S.D = D_EMG;
+%     S.plot = 1;
+%     S.triallength = 2000;
+%     S.wind = @hanning;
+%     spm_opm_psd(S);
+%     xlim([1,100])
+% 
+%     % plot time series
+%     figure
+%     plot(ftdat.time{1},ftdat.trial{1}(1,:))
+%     hold on
+%     plot(ftdat.time{1},ftdat.trial{1}(2,:)) %trigger
 
     %% resample MEG to match EMG
 
@@ -143,8 +143,8 @@ for k=1:length(MEGruns)
     title('Pre hfc/amm')
 
 %     sf=1000;
-%     figure;
-%     plot(timevec, Ds(:,:))
+    figure;
+    plot(timevec, Ds(:,:)./1000)
 
 
     %% hfc or amm

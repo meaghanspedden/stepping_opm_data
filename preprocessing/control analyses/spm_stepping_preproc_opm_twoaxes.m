@@ -11,15 +11,16 @@ addpath(genpath('D:\stepping_data_opm')) %github repository path
 
 
 %Subject ID----------
-sub='OP00054';
+%sub='OP00054';
 %sub='OP00061';
-%sub='OP00159';
+sub='OP00159';
 
 hfc_amm = 1;
 
 
 datpath='D:\STEPPING_bids_v1\';
 savepath=['D:\steppingsave_v1\',sub(3:end)];
+
 
 if ~exist(savepath,'dir')
     mkdir(savepath)
@@ -125,6 +126,8 @@ for k=1:length(MEGruns)
     else
         badchanidx=find(contains(Ds.chanlabels,badchans));
         Ds=Ds.badchannels(badchanidx,1);
+        Xaxes=find(contains(Ds.chanlabels, '-X'));
+        Ds=Ds.badchannels(Xaxes,1);
     end
 
     MEGchans=find(contains(D.chantype,'MEGMAG')); %idx
@@ -295,7 +298,7 @@ for k=1:length(MEGruns)
     S = [];
     S.D = Dfilt;
     S.bc = 0;
-    S.prefix = 'ep_erd';
+    S.prefix = 'ep_erd_2axes';
     S.trl = ([evSamples'-(Dfilt.fsample*1.5) evSamples'+(Dfilt.fsample*3) ones(length(evSamples),1)*Dfilt.fsample*1.5]);
     ERDepoch = spm_eeg_epochs(S);
 
@@ -321,7 +324,7 @@ for k=1:length(MEGruns)
 
 
     MEGdim=size(ERDepoch,1);
-    clonename=sprintf('%s_clone%s_erd',sub(3:end),MEGruns{k});
+    clonename=sprintf('%s_clone%s_erd_2axes',sub(3:end),MEGruns{k});
     newdataerd = clone(ERDepoch, clonename, [MEGdim+1 size(ERDepoch,2), size(ERDepoch,3)], 1);
 
     %add EMG data
@@ -342,6 +345,8 @@ for k=1:length(MEGruns)
 
     if ~isempty(badchanidx)
         newdataerd=newdataerd.badchannels(badchanidx, 1);
+        newdataerd=newdataerd.badchannels(Xaxes,1);
+
     end
 
     save(newdataerd)
@@ -358,7 +363,7 @@ count = 0;
 for r = 1:length(MEGruns)
     count = count+1;
 
-    S.D(count,:) = char(strcat(datpath,'sub-OP',sub(3:end),'\ses-001\meg\',sub(3:end),'_clone',MEGruns(r),'_erd.mat'));
+    S.D(count,:) = char(strcat(datpath,'sub-OP',sub(3:end),'\ses-001\meg\',sub(3:end),'_clone',MEGruns(r),'_erd_2axes.mat'));
 
 end
 
@@ -368,7 +373,7 @@ S.recode.labelorg = '.*';
 S.recode.labelnew = '#labelorg#';
 
 if hfc_amm
-    S.prefix = 'erd';
+    S.prefix = 'erd_2axes';
 else
     S.prefix = 'erd_nofiltering';
 end

@@ -6,21 +6,24 @@ spm('defaults','EEG')
 
 
 sub='OP00159';
-BF_file_dir = {['D:\steppingsave_v1\',sub(3:end)]}; %where you want to save the BF file
+BF_file_dir = {['D:\steppingsave_v1\',sub(3:end),'\error_fullbrain']}; %where you want to save the BF file
 data_file={['D:\steppingsave_v1\',sub(3:end),'\erd',sub(3:end),'_clone001_erd.mat']};
 
+filename_kin=['D:\STEPPING\stepping paper\Sci data paper\Sub',sub(3:end),'_step_error.mat'];
+load(filename_kin)
 
+err=y_error'; err=err(:);
+med_val=median(err);
+below_idx=find(err<med_val);
+above_idx=find(err>med_val);
 
+%% find trials with those indices and mark conditions
 
+D=spm_eeg_load(data_file{1});
 
-% 
-% D=spm_eeg_load(data_file)
-% ntrials=size(D(:,:,:),3)
-% newntrials=120;
-% ind_use=randperm(150,1,120);
-% ind_dontuse=setxor(1:150,ind_use)
-% D=conditions(D, ind, 'COND1')
-% D=conditions(D, ind, 'COND2')
+D=conditions(D, below_idx, 'LOW');
+D=conditions(D, above_idx, 'HIGH');
+save(D)
 
 
 
@@ -48,7 +51,7 @@ end
 
 standing_time = [1600 2100]; %same for all participants
 
-%% standing epoch
+%% low error
 
 matlabbatch = [];
 
@@ -79,13 +82,13 @@ matlabbatch{3}.spm.tools.beamforming.features.plugin.csd.taper = 'dpss';
 matlabbatch{3}.spm.tools.beamforming.features.plugin.csd.keepreal = 0;
 matlabbatch{3}.spm.tools.beamforming.features.plugin.csd.hanning = 0;
 
-if spatial_filt_flag
+%if spatial_filt_flag
 
     matlabbatch{3}.spm.tools.beamforming.features.regularisation.clifftrunc.zthresh = -1;
     matlabbatch{3}.spm.tools.beamforming.features.regularisation.clifftrunc.omit = 0;
-else
-    matlabbatch{3}.spm.tools.beamforming.features.regularisation.manual.lambda = 5;
-end
+% else
+%     matlabbatch{3}.spm.tools.beamforming.features.regularisation.manual.lambda = 5;
+% end
 
 matlabbatch{3}.spm.tools.beamforming.features.bootstrap = false;
 matlabbatch{3}.spm.tools.beamforming.features.visualise = 1;
@@ -95,9 +98,9 @@ matlabbatch{4}.spm.tools.beamforming.inverse.plugin.dics.fixedori = 'yes';
 
 
 matlabbatch{5}.spm.tools.beamforming.output.BF(1) = cfg_dep('Inverse solution: BF.mat file', substruct('.','val', '{}',{4}, '.','val', '{}',{1}, '.','val', '{}',{1}, '.','val', '{}',{1}), substruct('.','BF'));
-matlabbatch{5}.spm.tools.beamforming.output.plugin.image_power.whatconditions.all = 1;
+matlabbatch{5}.spm.tools.beamforming.output.plugin.image_power.whatconditions.condlabel = {'LOW'};
 matlabbatch{5}.spm.tools.beamforming.output.plugin.image_power.contrast = [1];
-matlabbatch{5}.spm.tools.beamforming.output.plugin.image_power.woi = standing_time;
+matlabbatch{5}.spm.tools.beamforming.output.plugin.image_power.woi = stepping_time;
 matlabbatch{5}.spm.tools.beamforming.output.plugin.image_power.datafeatures = 'sumpower';
 matlabbatch{5}.spm.tools.beamforming.output.plugin.image_power.foi = freqband;
 matlabbatch{5}.spm.tools.beamforming.output.plugin.image_power.sametrials = false;
@@ -134,12 +137,12 @@ smoothed_files = a1{1}.files;
 
 %% copy images into folder for standing condition
 
-stand_dir = fullfile(BF_file_dir,'stand');
+lowerror_dir = fullfile(BF_file_dir,'lowerror');
 
-if ~exist(stand_dir{:},'dir'); mkdir(stand_dir{:}); end
+if ~exist(lowerror_dir{:},'dir'); mkdir(lowerror_dir{:}); end
 
-spm_copy(a{end}.files,stand_dir);
-spm_copy(smoothed_files', stand_dir);
+spm_copy(a{end}.files,lowerror_dir);
+spm_copy(smoothed_files', lowerror_dir);
 
 for ii = 1:numel(a{end}.files)
     delete(a{end}.files{ii});
@@ -147,13 +150,13 @@ for ii = 1:numel(a{end}.files)
 end
 
 
-%% now do the same for stepping
+%% now do the same for high error
 
 BF_file = a{end}.BF; %use modules from prev analysis, only output changing periods
 
 matlabbatch = [];
 matlabbatch{1}.spm.tools.beamforming.output.BF(1) = BF_file;
-matlabbatch{1}.spm.tools.beamforming.output.plugin.image_power.whatconditions.all = 1;
+matlabbatch{1}.spm.tools.beamforming.output.plugin.image_power.whatconditions.condlabel = {'HIGH'};
 matlabbatch{1}.spm.tools.beamforming.output.plugin.image_power.contrast = [1];
 matlabbatch{1}.spm.tools.beamforming.output.plugin.image_power.woi = stepping_time;
 matlabbatch{1}.spm.tools.beamforming.output.plugin.image_power.datafeatures = 'sumpower';
@@ -188,12 +191,12 @@ matlabbatch{1}.spm.spatial.smooth.data = a{end}.files;
 smoothed_files = a1{1}.files;
 
 
-step_dir = fullfile(BF_file_dir,'step');
+higherror_dir = fullfile(BF_file_dir,'higherror');
 
-if ~exist(step_dir{:},'dir'); mkdir(step_dir{:}); end
+if ~exist(higherror_dir{:},'dir'); mkdir(higherror_dir{:}); end
 
-spm_copy(a{end}.files,step_dir);
-spm_copy(smoothed_files', step_dir);
+spm_copy(a{end}.files,higherror_dir);
+spm_copy(smoothed_files', higherror_dir);
 
 for ii = 1:numel(a{end}.files)
     delete(a{end}.files{ii});
@@ -209,8 +212,8 @@ if ~exist(spm_dir{:},'dir')
     mkdir(spm_dir{:}); 
 end
 
-dcon = cellstr(spm_select('fplist',stand_dir,'^.*suv.*\.nii$'));
-dact = cellstr(spm_select('fplist',step_dir,'^.*suv.*\.nii$'));
+dcon = cellstr(spm_select('fplist',lowerror_dir,'^.*suv.*\.nii$'));
+dact = cellstr(spm_select('fplist',higherror_dir,'^.*suv.*\.nii$'));
 
 
 matlabbatch = [];

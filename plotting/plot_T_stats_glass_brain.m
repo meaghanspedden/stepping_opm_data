@@ -8,20 +8,25 @@ spm('defaults','EEG');
 
 %subs={'00054', '00061', '00159'};
 
-subs={'00159'};
+subs={'00061'};
 
 all_t_img=zeros(91, 109, 91, length(subs));
 t_thresh=zeros(1,length(subs));
 
-for s = 1:length(subs)
+    thissub=subs{1};
 
-    thissub=subs{s};
 
-    SPMpath=['D:\steppingsave_v1\', thissub, '\spm\'];
+ files={['D:\steppingsave_v1\', thissub, '\ntrials_1_1\spm\'];['D:\steppingsave_v1\', thissub, '\ntrials_1_2\spm\'];...
+    ['D:\steppingsave_v1\', thissub, '\ntrials_1_3\spm\']; ['D:\steppingsave_v1\', thissub, '\ntrials_1_4\spm\']; };
+
+for s = 2:length(files)
+
+
+    SPMpath=files{s};
 
 
     matlabbatch=[];
-    matlabbatch{1}.spm.stats.results.spmmat(1) = {[SPMpath '\SPM.mat']};
+    matlabbatch{1}.spm.stats.results.spmmat(1) = {[SPMpath 'SPM.mat']};
     matlabbatch{1}.spm.stats.results.conspec.titlestr = 'move';
     matlabbatch{1}.spm.stats.results.conspec.contrasts = 1;
     matlabbatch{1}.spm.stats.results.conspec.threshdesc = 'FWE';
@@ -36,42 +41,42 @@ for s = 1:length(subs)
 
 
     S = [];
-    S.mri  = [SPMpath,'spmT_0001.nii'];
-
+    S.mri  = [SPMpath,'\spmT_0001.nii'];
     S.threshold = xSPM.u;
     S.tail = 1;
     S.detail = 1;
     S.glass.colourbar = 1;
     S.glass.cmap = 'winter';
     %S.glass.detail = 2;
-    figure
+   fig= figure
     [h, t_img] = mes_go_mri2glass(S);
+waitfor(fig)
+     all_t_img(:,:,:,s) = t_img;
+%
 
-%     all_t_img(:,:,:,s) = t_img;
-%     
-%     t_thresh(s)=xSPM.u;
+    t_thresh(s)=xSPM.u;
 
 end
 
-
+error('stop')
 %% take minimum t stat across participants for each voxel
 
-% all_min_t = min(all_t_img,[], 4);
+ all_mean_t = mean(all_t_img,4);
 % 
 % %plot
 % 
 % 
-% S = [];
-% S.mri  = [SPMpath,'spmT_0002.nii']; %just use for MNI locs (hdr)
-% S.map = all_min_t;
-% S.threshold = min(t_thresh);
-% S.tail = 1;
-% S.detail = 1;
-% S.glass.colourbar = 1;
-% S.glass.cmap = 'winter';
-% 
-% figure
-% h = mes_go_mri2glass_group(S);
+S = [];
+S.mri  = [SPMpath,'spmT_0001.nii']; %just use for MNI locs (hdr)
+S.map = all_mean_t;
+S.threshold = min(t_thresh);
+S.tail = 1;
+S.detail = 1;
+S.glass.colourbar = 1;
+S.glass.cmap = 'winter';
+
+figure
+h = mes_go_mri2glass_group(S);
 % 
 % 
 % % plot
